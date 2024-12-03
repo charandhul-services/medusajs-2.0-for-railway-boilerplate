@@ -4,12 +4,12 @@
  * @param errorMessage - Error message to throw if value is undefined
  */
 export function assertValue<T extends string | undefined>(
-  v: T | undefined,
-  errorMessage: string,
-): T {
-  if (v === undefined) {
-    throw new Error(errorMessage)
+    v: T | undefined,
+    errorMessage: string,
+  ): T {
+    if (v === undefined) {
+      throw new Error(errorMessage)
+    }
+  
+    return v
   }
-
-  return v
-}

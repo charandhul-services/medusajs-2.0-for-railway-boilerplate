@@ -42,91 +42,171 @@ const medusaConfig = {
     backendUrl: BACKEND_URL,
     disable: SHOULD_DISABLE_ADMIN,
   },
+
+
+  // modules: [
+  //   {
+  //     key: Modules.FILE,
+  //     resolve: '@medusajs/file',
+  //     options: {
+  //       providers: [
+  //         ...(MINIO_ENDPOINT && MINIO_ACCESS_KEY && MINIO_SECRET_KEY ? [{
+  //           resolve: './src/modules/minio-file',
+  //           id: 'minio',
+  //           options: {
+  //             endPoint: MINIO_ENDPOINT,
+  //             accessKey: MINIO_ACCESS_KEY,
+  //             secretKey: MINIO_SECRET_KEY,
+  //             bucket: MINIO_BUCKET // Optional, default: medusa-media
+  //           }
+  //         }] : [{
+  //           resolve: '@medusajs/file-local',
+  //           id: 'local',
+  //           options: {
+  //             upload_dir: 'static',
+  //             backend_url: `${BACKEND_URL}/static`
+  //           }
+  //         }])
+  //       ]
+  //     }
+  //   },
+  //   ...(REDIS_URL ? [{
+  //     key: Modules.EVENT_BUS,
+  //     resolve: '@medusajs/event-bus-redis',
+  //     options: {
+  //       redisUrl: REDIS_URL
+  //     }
+  //   },
+  //   {
+  //     key: Modules.WORKFLOW_ENGINE,
+  //     resolve: '@medusajs/workflow-engine-redis',
+  //     options: {
+  //       redis: {
+  //         url: REDIS_URL,
+  //       }
+  //     }
+  //   }] : 
+    
+    
+  //   []),
+
+
+
+  // ],
+
   modules: [
     {
       key: Modules.FILE,
       resolve: '@medusajs/file',
       options: {
         providers: [
-          ...(MINIO_ENDPOINT && MINIO_ACCESS_KEY && MINIO_SECRET_KEY ? [{
-            resolve: './src/modules/minio-file',
-            id: 'minio',
-            options: {
-              endPoint: MINIO_ENDPOINT,
-              accessKey: MINIO_ACCESS_KEY,
-              secretKey: MINIO_SECRET_KEY,
-              bucket: MINIO_BUCKET // Optional, default: medusa-media
-            }
-          }] : [{
-            resolve: '@medusajs/file-local',
-            id: 'local',
-            options: {
-              upload_dir: 'static',
-              backend_url: `${BACKEND_URL}/static`
-            }
-          }])
-        ]
-      }
-    },
-    ...(REDIS_URL ? [{
-      key: Modules.EVENT_BUS,
-      resolve: '@medusajs/event-bus-redis',
-      options: {
-        redisUrl: REDIS_URL
-      }
+          ...(MINIO_ENDPOINT && MINIO_ACCESS_KEY && MINIO_SECRET_KEY
+            ? [
+                {
+                  resolve: './src/modules/minio-file',
+                  id: 'minio',
+                  options: {
+                    endPoint: MINIO_ENDPOINT,
+                    accessKey: MINIO_ACCESS_KEY,
+                    secretKey: MINIO_SECRET_KEY,
+                    bucket: MINIO_BUCKET, // Optional, default: medusa-media
+                  },
+                },
+              ]
+            : [
+                {
+                  resolve: '@medusajs/file-local',
+                  id: 'local',
+                  options: {
+                    upload_dir: 'static',
+                    backend_url: `${BACKEND_URL}/static`,
+                  },
+                },
+              ])
+        ],
+      },
     },
     {
-      key: Modules.WORKFLOW_ENGINE,
-      resolve: '@medusajs/workflow-engine-redis',
+      resolve: './src/modules/fashion',
+    },
+    {
+      resolve: '@medusajs/medusa/cache-redis',
+      options: {
+        redisUrl: process.env.REDIS_URL,
+      },
+    },
+    {
+      resolve: '@medusajs/medusa/event-bus-redis',
+      options: {
+        redisUrl: process.env.REDIS_URL,
+      },
+    },
+    {
+      resolve: '@medusajs/medusa/workflow-engine-redis',
       options: {
         redis: {
-          url: REDIS_URL,
-        }
-      }
-    }] : []),
-    ...(SENDGRID_API_KEY && SENDGRID_FROM_EMAIL || RESEND_API_KEY && RESEND_FROM_EMAIL ? [{
-      key: Modules.NOTIFICATION,
-      resolve: '@medusajs/notification',
-      options: {
-        providers: [
-          ...(SENDGRID_API_KEY && SENDGRID_FROM_EMAIL ? [{
-            resolve: '@medusajs/notification-sendgrid',
-            id: 'sendgrid',
-            options: {
-              channels: ['email'],
-              api_key: SENDGRID_API_KEY,
-              from: SENDGRID_FROM_EMAIL,
-            }
-          }] : []),
-          ...(RESEND_API_KEY && RESEND_FROM_EMAIL ? [{
-            resolve: './src/modules/email-notifications',
-            id: 'resend',
-            options: {
-              channels: ['email'],
-              api_key: RESEND_API_KEY,
-              from: RESEND_FROM_EMAIL,
-            },
-          }] : []),
-        ]
-      }
-    }] : []),
-    ...(STRIPE_API_KEY && STRIPE_WEBHOOK_SECRET ? [{
-      key: Modules.PAYMENT,
-      resolve: '@medusajs/payment',
+          url: process.env.REDIS_URL,
+        },
+      },
+    },
+    {
+      resolve: '@medusajs/medusa/payment',
       options: {
         providers: [
           {
-            resolve: '@medusajs/payment-stripe',
             id: 'stripe',
+            resolve: '@medusajs/medusa/payment-stripe',
             options: {
-              apiKey: STRIPE_API_KEY,
-              webhookSecret: STRIPE_WEBHOOK_SECRET,
+              apiKey: process.env.STRIPE_API_KEY,
+              webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+            },
+          },
+          {
+            resolve: '@sgftech/payment-razorpay',
+            id: 'razorpay',
+            options: {
+              key_id:
+                process?.env?.RAZORPAY_TEST_KEY_ID ?? process?.env?.RAZORPAY_ID,
+              key_secret:
+                process?.env?.RAZORPAY_TEST_KEY_SECRET ??
+                process?.env?.RAZORPAY_SECRET,
+              razorpay_account:
+                process?.env?.RAZORPAY_TEST_ACCOUNT ??
+                process?.env?.RAZORPAY_ACCOUNT,
+              automatic_expiry_period: 30, // Between 12 minutes and 30 days (in minutes)
+              manual_expiry_period: 20,
+              refund_speed: 'normal',
+              webhook_secret:
+                process?.env?.RAZORPAY_TEST_WEBHOOK_SECRET ??
+                process?.env?.RAZORPAY_WEBHOOK_SECRET,
             },
           },
         ],
       },
-    }] : [])
+    },
+    ...(REDIS_URL
+      ? [
+          {
+            key: Modules.EVENT_BUS,
+            resolve: '@medusajs/event-bus-redis',
+            options: {
+              redisUrl: REDIS_URL,
+            },
+          },
+          {
+            key: Modules.WORKFLOW_ENGINE,
+            resolve: '@medusajs/workflow-engine-redis',
+            options: {
+              redis: {
+                url: REDIS_URL,
+              },
+            },
+          },
+        ]
+      : []),
   ],
+  
+
   plugins: []
 };
 
