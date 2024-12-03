@@ -74,9 +74,7 @@ const medusaConfig = {
        
         ],
      } },
-     {
-      resolve:"./src/"
-     }
+   
     {
       key: Modules.FILE,
       resolve: '@medusajs/file',
